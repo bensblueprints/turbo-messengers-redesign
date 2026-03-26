@@ -60,16 +60,18 @@ function Navigation() {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay: 0.2 }}
-      className="fixed top-0 left-0 right-0 z-50 px-6 py-4"
+      className="fixed top-0 left-0 right-0 z-50 px-6 py-4 bg-midnight-950/80 backdrop-blur-md border-b border-midnight-800/50"
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <motion.div
           whileHover={{ scale: 1.02 }}
           className="flex items-center gap-3"
         >
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center">
-            <Zap className="w-6 h-6 text-midnight-950" />
-          </div>
+          <img
+            src="/images/logo-white.png"
+            alt="Turbo Messengers"
+            className="h-10 w-auto"
+          />
           <div>
             <span className="text-xl font-display font-bold tracking-tight">
               Turbo<span className="text-gold-400">Messengers</span>
@@ -94,16 +96,27 @@ function Navigation() {
           ))}
         </div>
 
-        <motion.a
-          href="tel:8187710904"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="btn-primary flex items-center gap-2 text-sm"
-        >
-          <Phone className="w-4 h-4" />
-          <span className="hidden sm:inline">(818) 771-0904</span>
-          <span className="sm:hidden">Call Now</span>
-        </motion.a>
+        <div className="flex items-center gap-3">
+          <motion.a
+            href="/login"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-4 py-2 text-sm font-medium text-midnight-300 hover:text-gold-400 transition-colors hidden sm:flex items-center gap-2"
+          >
+            <Users className="w-4 h-4" />
+            Client Login
+          </motion.a>
+          <motion.a
+            href="tel:8187710904"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="btn-primary flex items-center gap-2 text-sm"
+          >
+            <Phone className="w-4 h-4" />
+            <span className="hidden sm:inline">(818) 771-0904</span>
+            <span className="sm:hidden">Call</span>
+          </motion.a>
+        </div>
       </div>
     </motion.nav>
   );
@@ -121,8 +134,18 @@ function Hero() {
   return (
     <section
       ref={ref}
-      className="relative min-h-screen flex items-center justify-center hero-gradient overflow-hidden"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <img
+          src="/images/downtown-la-home-slider.jpg"
+          alt="Downtown Los Angeles"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-midnight-950/90 via-midnight-950/80 to-midnight-950" />
+      </div>
+
       {/* Background Effects */}
       <motion.div
         style={{ y }}
