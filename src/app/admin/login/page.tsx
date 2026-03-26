@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Shield, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { signIn } from "next-auth/react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -21,29 +21,19 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const result = await signIn("credentials", {
         email,
         password,
+        redirect: false,
       });
 
-      if (error) throw error;
-
-      // Check user role
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", data.user.id)
-        .single();
-
-      if (profile?.role !== "admin") {
-        await supabase.auth.signOut();
-        throw new Error("You do not have admin access. Please use the client portal.");
+      if (result?.error) {
+        setError("Invalid email or password");
+      } else {
+        router.push("/admin");
       }
-
-      router.push("/admin");
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "An error occurred";
-      setError(errorMessage);
+    } catch {
+      setError("An error occurred");
     } finally {
       setIsLoading(false);
     }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "Turbo Messengers | Los Angeles Premier Process Serving & Court Filing",
@@ -15,8 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="noise-overlay" aria-hidden="true" />
-        {children}
+        <Providers>
+          <div className="noise-overlay" aria-hidden="true" />
+          {children}
+        </Providers>
       </body>
     </html>
   );

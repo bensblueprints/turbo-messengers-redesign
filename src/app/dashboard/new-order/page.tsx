@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { useSession } from "next-auth/react";
 
 const serviceTypes = [
   { id: "process_service", label: "Process Service", description: "Serve legal documents", price: 95 },
@@ -38,10 +38,10 @@ const counties = [
 
 export default function NewOrderPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     job_type: "",
@@ -58,17 +58,10 @@ export default function NewOrderPage() {
   });
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    if (status === "unauthenticated") {
       router.push("/login");
-      return;
     }
-    setUserId(session.user.id);
-  };
+  }, [status, router]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -87,50 +80,45 @@ export default function NewOrderPage() {
   };
 
   const handleSubmit = async () => {
-    if (!userId) return;
+    if (!session?.user) return;
 
     setIsSubmitting(true);
     try {
-      // Create the job
-      const { data: job, error } = await supabase
-        .from("jobs")
-        .insert({
-          client_id: userId,
+      const response = await fetch("/api/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           job_type: formData.job_type,
-          status: "pending",
           defendant_name: formData.defendant_name,
           defendant_address: `${formData.defendant_address}, ${formData.defendant_city}, ${formData.defendant_state} ${formData.defendant_zip}`,
           case_number: formData.case_number,
           court_name: formData.court_name,
           notes: formData.notes,
           rush_service: formData.rush_service,
-        })
-        .select()
-        .single();
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) throw new Error("Failed to create order");
 
-      // Upload documents if any
-      for (const file of uploadedFiles) {
-        const filePath = `${job.id}/${file.name}`;
-        await supabase.storage.from("documents").upload(filePath, file);
-
-        await supabase.from("documents").insert({
-          job_id: job.id,
-          file_name: file.name,
-          file_url: filePath,
-          file_type: file.type,
-          uploaded_by: userId,
-        });
-      }
-
-      router.push(`/dashboard/order/${job.id}`);
+      const data = await response.json();
+      router.push(`/dashboard`);
     } catch (error) {
       console.error("Error creating order:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-midnight-950 flex items-center justify-center">
+        <div className="flex items-center gap-3 text-midnight-400">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          Loading...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-midnight-950">

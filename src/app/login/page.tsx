@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Zap, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,28 +25,19 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const result = await signIn("credentials", {
         email,
         password,
+        redirect: false,
       });
 
-      if (error) throw error;
-
-      // Check user role and redirect accordingly
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", data.user.id)
-        .single();
-
-      if (profile?.role === "admin") {
-        router.push("/admin");
+      if (result?.error) {
+        setError("Invalid email or password");
       } else {
         router.push("/dashboard");
       }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "An error occurred";
-      setError(errorMessage);
+    } catch {
+      setError("An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -58,36 +49,30 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            company_name: companyName,
-            phone: phone,
-          },
-        },
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, fullName, companyName, phone }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
 
-      if (data.user) {
-        // Create profile
-        await supabase.from("profiles").insert({
-          id: data.user.id,
-          email,
-          full_name: fullName,
-          company_name: companyName,
-          phone,
-          role: "client",
-        });
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create account");
+      }
 
+      // Auto login after signup
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.ok) {
         router.push("/dashboard");
       }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "An error occurred";
-      setError(errorMessage);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -232,17 +217,6 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-
-            {!isSignUp && (
-              <div className="flex justify-end">
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-gold-400 hover:text-gold-300 transition-colors"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-            )}
 
             <motion.button
               type="submit"

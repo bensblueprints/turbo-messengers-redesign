@@ -20,7 +20,23 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase, type Job, type Profile } from "@/lib/supabase";
+import { useSession, signOut } from "next-auth/react";
+
+interface Job {
+  id: number;
+  client_id: number;
+  job_type: string;
+  status: "pending" | "in_progress" | "completed" | "on_hold";
+  defendant_name: string | null;
+  defendant_address: string | null;
+  case_number: string | null;
+  court_name: string | null;
+  notes: string | null;
+  rush_service: boolean;
+  proof_of_service_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 const statusColors: Record<string, { bg: string; text: string; icon: React.ElementType }> = {
   pending: { bg: "bg-yellow-500/10", text: "text-yellow-400", icon: Clock },
@@ -38,51 +54,36 @@ const jobTypeLabels: Record<string, string> = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<Profile | null>(null);
+  const { data: session, status } = useSession();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
+    if (status === "unauthenticated") {
       router.push("/login");
-      return;
+    } else if (status === "authenticated") {
+      fetchJobs();
     }
+  }, [status, router]);
 
-    // Get profile
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-
-    if (profile) {
-      setUser(profile);
+  const fetchJobs = async () => {
+    try {
+      const response = await fetch("/api/jobs");
+      if (response.ok) {
+        const data = await response.json();
+        setJobs(data.jobs || []);
+      }
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    // Get jobs
-    const { data: jobsData } = await supabase
-      .from("jobs")
-      .select("*")
-      .eq("client_id", session.user.id)
-      .order("created_at", { ascending: false });
-
-    if (jobsData) {
-      setJobs(jobsData);
-    }
-
-    setIsLoading(false);
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut({ redirect: false });
     router.push("/");
   };
 
@@ -101,7 +102,7 @@ export default function DashboardPage() {
     completed: jobs.filter((j) => j.status === "completed").length,
   };
 
-  if (isLoading) {
+  if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen bg-midnight-950 flex items-center justify-center">
         <div className="flex items-center gap-3 text-midnight-400">
@@ -132,7 +133,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4">
               <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-midnight-800/50 border border-midnight-700/50">
                 <User className="w-4 h-4 text-midnight-400" />
-                <span className="text-sm text-midnight-300">{user?.full_name || user?.email}</span>
+                <span className="text-sm text-midnight-300">{session?.user?.name || session?.user?.email}</span>
               </div>
               <button
                 onClick={handleLogout}
@@ -153,7 +154,7 @@ export default function DashboardPage() {
           className="mb-8"
         >
           <h1 className="text-3xl font-display font-bold text-white mb-2">
-            Welcome back, {user?.full_name?.split(" ")[0] || "Client"}
+            Welcome back, {session?.user?.name?.split(" ")[0] || "Client"}
           </h1>
           <p className="text-midnight-400">
             Manage your process service requests and track their status.
@@ -172,7 +173,7 @@ export default function DashboardPage() {
             { label: "Pending", value: stats.pending, color: "text-yellow-400" },
             { label: "In Progress", value: stats.inProgress, color: "text-blue-400" },
             { label: "Completed", value: stats.completed, color: "text-green-400" },
-          ].map((stat, i) => (
+          ].map((stat) => (
             <div
               key={stat.label}
               className="bg-midnight-900/50 border border-midnight-800/50 rounded-xl p-4"

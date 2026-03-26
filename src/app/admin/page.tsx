@@ -5,11 +5,9 @@ import { motion } from "framer-motion";
 import {
   FileText,
   Users,
-  DollarSign,
   TrendingUp,
   Clock,
   CheckCircle,
-  AlertCircle,
   LogOut,
   Shield,
   ChevronRight,
@@ -20,11 +18,35 @@ import {
   Loader2,
   RefreshCw,
   Calendar,
-  MapPin,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase, type Job, type Profile } from "@/lib/supabase";
+import { useSession, signOut } from "next-auth/react";
+
+interface Job {
+  id: number;
+  client_id: number;
+  job_type: string;
+  status: "pending" | "in_progress" | "completed" | "on_hold";
+  defendant_name: string | null;
+  defendant_address: string | null;
+  case_number: string | null;
+  court_name: string | null;
+  notes: string | null;
+  rush_service: boolean;
+  proof_of_service_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Client {
+  id: number;
+  email: string;
+  full_name: string;
+  company_name: string | null;
+  phone: string | null;
+  role: string;
+  created_at: string;
+}
 
 const statusColors: Record<string, { bg: string; text: string; label: string }> = {
   pending: { bg: "bg-yellow-500/10", text: "text-yellow-400", label: "Pending" },
@@ -42,72 +64,70 @@ const jobTypeLabels: Record<string, string> = {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<Profile | null>(null);
+  const { data: session, status } = useSession();
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [clients, setClients] = useState<Profile[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<"overview" | "jobs" | "clients">("overview");
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
+    if (status === "unauthenticated") {
       router.push("/admin/login");
-      return;
+    } else if (status === "authenticated") {
+      // Check if user is admin
+      const userRole = (session?.user as { role?: string })?.role;
+      if (userRole !== "admin") {
+        router.push("/admin/login");
+      } else {
+        fetchData();
+      }
     }
+  }, [status, session, router]);
 
-    // Get profile and verify admin
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
+  const fetchData = async () => {
+    try {
+      const [jobsRes, clientsRes] = await Promise.all([
+        fetch("/api/admin/jobs"),
+        fetch("/api/admin/clients"),
+      ]);
 
-    if (profile?.role !== "admin") {
-      router.push("/admin/login");
-      return;
+      if (jobsRes.ok) {
+        const jobsData = await jobsRes.json();
+        setJobs(jobsData.jobs || []);
+      }
+
+      if (clientsRes.ok) {
+        const clientsData = await clientsRes.json();
+        setClients(clientsData.clients || []);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    setUser(profile);
-
-    // Get all jobs
-    const { data: jobsData } = await supabase
-      .from("jobs")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (jobsData) setJobs(jobsData);
-
-    // Get all clients
-    const { data: clientsData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("role", "client")
-      .order("created_at", { ascending: false });
-
-    if (clientsData) setClients(clientsData);
-
-    setIsLoading(false);
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut({ redirect: false });
     router.push("/");
   };
 
-  const updateJobStatus = async (jobId: string, newStatus: string) => {
-    await supabase
-      .from("jobs")
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq("id", jobId);
+  const updateJobStatus = async (jobId: number, newStatus: string) => {
+    try {
+      const response = await fetch("/api/admin/jobs", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId, status: newStatus }),
+      });
 
-    setJobs(jobs.map((j) => (j.id === jobId ? { ...j, status: newStatus as Job["status"] } : j)));
+      if (response.ok) {
+        setJobs(jobs.map((j) => (j.id === jobId ? { ...j, status: newStatus as Job["status"] } : j)));
+      }
+    } catch (error) {
+      console.error("Error updating job status:", error);
+    }
   };
 
   const filteredJobs = jobs.filter((job) => {
@@ -127,7 +147,7 @@ export default function AdminDashboard() {
     todayJobs: jobs.filter((j) => new Date(j.created_at).toDateString() === new Date().toDateString()).length,
   };
 
-  if (isLoading) {
+  if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen bg-midnight-950 flex items-center justify-center">
         <div className="flex items-center gap-3 text-midnight-400">
@@ -160,7 +180,7 @@ export default function AdminDashboard() {
 
             <div className="flex items-center gap-4">
               <button
-                onClick={checkAuth}
+                onClick={fetchData}
                 className="p-2 rounded-lg text-midnight-400 hover:text-electric-400 hover:bg-electric-500/10 transition-colors"
                 title="Refresh data"
               >
@@ -168,7 +188,7 @@ export default function AdminDashboard() {
               </button>
               <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-midnight-800/50 border border-midnight-700/50">
                 <Shield className="w-4 h-4 text-electric-400" />
-                <span className="text-sm text-midnight-300">{user?.full_name || "Admin"}</span>
+                <span className="text-sm text-midnight-300">{session?.user?.name || "Admin"}</span>
               </div>
               <button
                 onClick={handleLogout}
@@ -259,7 +279,7 @@ export default function AdminDashboard() {
                         <div>
                           <p className="font-medium text-white">{job.defendant_name || "Unknown"}</p>
                           <p className="text-sm text-midnight-400">
-                            {jobTypeLabels[job.job_type]} • {job.case_number || "No case #"}
+                            {jobTypeLabels[job.job_type]} - {job.case_number || "No case #"}
                           </p>
                         </div>
                       </div>
