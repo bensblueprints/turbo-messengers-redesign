@@ -403,6 +403,74 @@ function Services() {
   );
 }
 
+function Gallery() {
+  const images = [
+    { src: "/images/lawyer-office-1.jpg", title: "Professional Service", description: "Serving law firms across Southern California" },
+    { src: "/images/legal-documents-1.jpg", title: "Document Handling", description: "Secure and timely document processing" },
+    { src: "/images/courthouse-1.jpg", title: "Court Filings", description: "Same-day filing at all SoCal courts" },
+    { src: "/images/lawyer-signing.jpg", title: "Legal Expertise", description: "Working with top attorneys since 2009" },
+    { src: "/images/legal-meeting.jpg", title: "Client Meetings", description: "Personalized service for every case" },
+    { src: "/images/scales-justice.jpg", title: "Justice Served", description: "Over 10,000 successful serves" },
+  ];
+
+  return (
+    <section className="relative py-24 bg-midnight-900/50">
+      <div className="max-w-7xl mx-auto px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-16"
+        >
+          <motion.span
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-block px-4 py-1.5 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-400 text-sm font-medium mb-6"
+          >
+            Our Work
+          </motion.span>
+          <h2 className="font-display text-4xl md:text-5xl font-bold mb-6">
+            <span className="text-white">Trusted by Law Firms</span>
+            <br />
+            <span className="text-gradient">Across Southern California</span>
+          </h2>
+          <p className="text-midnight-400 text-lg max-w-2xl mx-auto">
+            We work with attorneys, paralegals, and legal professionals to ensure timely and professional service.
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+          {images.map((image, index) => (
+            <motion.div
+              key={image.title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="group relative overflow-hidden rounded-2xl aspect-[4/3]"
+            >
+              <img
+                src={image.src}
+                alt={image.title}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-midnight-950 via-midnight-950/50 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
+                <h3 className="font-semibold text-white text-lg mb-1">{image.title}</h3>
+                <p className="text-midnight-300 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  {image.description}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Stats() {
   const stats = [
     { value: "15+", label: "Years Experience", icon: Clock },
@@ -530,30 +598,25 @@ function About() {
             className="relative"
           >
             <div className="relative">
-              {/* Main Card */}
+              {/* Main Image */}
               <motion.div
                 whileHover={{ scale: 1.02 }}
-                className="card-glass p-10 relative overflow-hidden"
+                className="relative overflow-hidden rounded-2xl"
               >
-                {/* Decorative Elements */}
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-gold-500/20 to-transparent rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-electric-500/20 to-transparent rounded-full blur-2xl" />
+                <img
+                  src="/images/document-delivery.jpg"
+                  alt="Process Server delivering documents"
+                  className="w-full h-auto rounded-2xl"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-midnight-950/80 via-transparent to-transparent" />
 
-                <div className="relative">
-                  <Award className="w-16 h-16 text-gold-400 mb-6" />
-                  <h3 className="font-display text-3xl font-bold text-white mb-4">
-                    Excellence in Service
-                  </h3>
-                  <p className="text-midnight-300 leading-relaxed mb-6">
-                    Our commitment to fast, reliable, and honest service has made us the #1 ranked messenger service in Southern California.
-                  </p>
-
-                  {/* Trust Badges */}
+                {/* Overlay Content */}
+                <div className="absolute bottom-0 left-0 right-0 p-6">
                   <div className="flex flex-wrap gap-3">
                     {["Licensed", "Bonded", "Insured"].map((badge) => (
                       <span
                         key={badge}
-                        className="px-4 py-2 rounded-lg bg-midnight-800/50 border border-midnight-700/50 text-sm text-gold-400"
+                        className="px-4 py-2 rounded-lg bg-midnight-900/80 backdrop-blur-sm border border-midnight-700/50 text-sm text-gold-400"
                       >
                         {badge}
                       </span>
@@ -577,16 +640,9 @@ function About() {
                 className="absolute -bottom-4 -left-4 px-6 py-3 rounded-xl bg-midnight-800 border border-midnight-700/50 shadow-xl"
               >
                 <div className="flex items-center gap-2">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className="w-8 h-8 rounded-full bg-gradient-to-br from-electric-400 to-electric-600 border-2 border-midnight-800"
-                      />
-                    ))}
-                  </div>
+                  <Award className="w-5 h-5 text-gold-400" />
                   <span className="text-sm text-midnight-300">
-                    Trusted by <span className="text-white font-medium">1000+</span> clients
+                    <span className="text-white font-medium">#1 Ranked</span> Since 2009
                   </span>
                 </div>
               </motion.div>
@@ -861,6 +917,7 @@ export default function Home() {
       <Navigation />
       <Hero />
       <Services />
+      <Gallery />
       <Stats />
       <About />
       <Contact />
