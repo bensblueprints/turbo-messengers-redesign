@@ -411,10 +411,10 @@ function Gallery() {
   const images = [
     { src: "/images/lawyer-office-1.jpg", title: "Professional Service", description: "Serving law firms across Southern California" },
     { src: "/images/legal-documents-1.jpg", title: "Document Handling", description: "Secure and timely document processing" },
-    { src: "/images/courthouse-1.jpg", title: "Court Filings", description: "Same-day filing at all SoCal courts" },
+    { src: "/images/courthouse-new.jpg", title: "Court Filings", description: "Same-day filing at all SoCal courts" },
     { src: "/images/lawyer-signing.jpg", title: "Legal Expertise", description: "Working with top attorneys since 2009" },
     { src: "/images/legal-meeting.jpg", title: "Client Meetings", description: "Personalized service for every case" },
-    { src: "/images/scales-justice.jpg", title: "Justice Served", description: "Over 10,000 successful serves" },
+    { src: "/images/scales-justice-new.jpg", title: "Justice Served", description: "Over 10,000 successful serves" },
   ];
 
   return (
