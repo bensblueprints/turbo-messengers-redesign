@@ -70,7 +70,7 @@ function Navigation() {
           <img
             src="/images/logo-nav.png"
             alt="Turbo Messengers - Process Servers"
-            className="h-12 w-auto"
+            className="h-8 sm:h-10 w-auto"
           />
         </motion.a>
 
@@ -409,12 +409,12 @@ function Services() {
 
 function Gallery() {
   const images = [
-    { src: "/images/lawyer-office-1.jpg", title: "Professional Service", description: "Serving law firms across Southern California" },
+    { src: "/images/messenger-delivery.jpg", title: "Turbo Messengers", description: "Lightning-fast document delivery" },
     { src: "/images/legal-documents-1.jpg", title: "Document Handling", description: "Secure and timely document processing" },
-    { src: "/images/courthouse-new.jpg", title: "Court Filings", description: "Same-day filing at all SoCal courts" },
+    { src: "/images/court-filing.jpg", title: "Court Filings", description: "Same-day filing at all SoCal courts" },
     { src: "/images/lawyer-signing.jpg", title: "Legal Expertise", description: "Working with top attorneys since 2009" },
     { src: "/images/legal-meeting.jpg", title: "Client Meetings", description: "Personalized service for every case" },
-    { src: "/images/scales-justice-new.jpg", title: "Justice Served", description: "Over 10,000 successful serves" },
+    { src: "/images/gavel.jpg", title: "Justice Served", description: "Over 10,000 successful serves" },
   ];
 
   return (
@@ -844,7 +844,7 @@ function Footer() {
               <img
                 src="/images/logo-footer.png"
                 alt="Turbo Messengers - Process Servers"
-                className="h-16 w-auto"
+                className="h-10 w-auto"
               />
             </div>
             <p className="text-midnight-400 max-w-md leading-relaxed">

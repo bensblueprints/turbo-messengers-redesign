@@ -128,7 +128,7 @@ function Navigation() {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <motion.div whileHover={{ scale: 1.02 }} className="flex items-center">
           <Link href="/">
-            <img src="/images/logo-nav.png" alt="Turbo Messengers - Process Servers" className="h-12 w-auto" />
+            <img src="/images/logo-nav.png" alt="Turbo Messengers - Process Servers" className="h-8 sm:h-10 w-auto" />
           </Link>
         </motion.div>
 
