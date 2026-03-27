@@ -27,7 +27,13 @@ import {
   MapPin,
   Scale,
   AlertCircle,
+  UserPlus,
+  Briefcase,
+  Star,
+  Settings,
+  LayoutDashboard,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 
@@ -382,6 +388,29 @@ export default function AdminDashboard() {
               New Order
             </motion.button>
           </div>
+        </div>
+
+        {/* Quick Links */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+          {[
+            { label: "Leads", href: "/admin/leads", icon: UserPlus, color: "text-blue-400", bg: "bg-blue-500/10" },
+            { label: "Services", href: "/admin/services", icon: Briefcase, color: "text-purple-400", bg: "bg-purple-500/10" },
+            { label: "Counties", href: "/admin/counties", icon: MapPin, color: "text-green-400", bg: "bg-green-500/10" },
+            { label: "Testimonials", href: "/admin/testimonials", icon: Star, color: "text-gold-400", bg: "bg-gold-500/10" },
+            { label: "Settings", href: "/admin/settings", icon: Settings, color: "text-electric-400", bg: "bg-electric-500/10" },
+            { label: "Dashboard", href: "/admin", icon: LayoutDashboard, color: "text-white", bg: "bg-midnight-800/50" },
+          ].map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              className={`${link.bg} border border-midnight-700/50 rounded-xl p-4 hover:scale-105 transition-transform`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <link.icon className={`w-5 h-5 ${link.color}`} />
+              </div>
+              <span className="text-white font-medium text-sm">{link.label}</span>
+            </Link>
+          ))}
         </div>
 
         {/* Overview Tab */}

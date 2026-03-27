@@ -387,3 +387,408 @@ export async function getClientJobHistory(clientId: number): Promise<Job[]> {
   `;
   return result as Job[];
 }
+
+// ============================================
+// LEADS MANAGEMENT
+// ============================================
+
+export interface Lead {
+  id: number;
+  name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  service_type?: string;
+  message?: string;
+  status: 'new' | 'contacted' | 'qualified' | 'converted' | 'closed';
+  source: string;
+  assigned_to?: number;
+  converted_to_client_id?: number;
+  created_at: string;
+  updated_at: string;
+  contacted_at?: string;
+  notes?: string;
+}
+
+export async function getAllLeads(): Promise<Lead[]> {
+  const result = await sql`SELECT * FROM leads ORDER BY created_at DESC`;
+  return result as Lead[];
+}
+
+export async function getLeadById(id: number): Promise<Lead | null> {
+  const result = await sql`SELECT * FROM leads WHERE id = ${id}`;
+  return result[0] as Lead || null;
+}
+
+export async function createLead(data: Partial<Lead>): Promise<Lead> {
+  const result = await sql`
+    INSERT INTO leads (name, email, phone, company, service_type, message, source, status)
+    VALUES (
+      ${data.name},
+      ${data.email || null},
+      ${data.phone || null},
+      ${data.company || null},
+      ${data.service_type || null},
+      ${data.message || null},
+      ${data.source || 'website'},
+      ${data.status || 'new'}
+    )
+    RETURNING *
+  `;
+  return result[0] as Lead;
+}
+
+export async function updateLead(id: number, data: Partial<Lead>): Promise<Lead | null> {
+  const result = await sql`
+    UPDATE leads
+    SET
+      name = COALESCE(${data.name || null}, name),
+      email = COALESCE(${data.email || null}, email),
+      phone = COALESCE(${data.phone || null}, phone),
+      company = COALESCE(${data.company || null}, company),
+      service_type = COALESCE(${data.service_type || null}, service_type),
+      message = COALESCE(${data.message || null}, message),
+      status = COALESCE(${data.status || null}, status),
+      notes = COALESCE(${data.notes || null}, notes),
+      assigned_to = COALESCE(${data.assigned_to || null}, assigned_to),
+      contacted_at = CASE WHEN ${data.status} = 'contacted' AND contacted_at IS NULL THEN NOW() ELSE contacted_at END,
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return result[0] as Lead || null;
+}
+
+export async function convertLeadToClient(leadId: number, clientId: number): Promise<void> {
+  await sql`
+    UPDATE leads
+    SET status = 'converted', converted_to_client_id = ${clientId}, updated_at = NOW()
+    WHERE id = ${leadId}
+  `;
+}
+
+export async function getLeadsByStatus(status: string): Promise<Lead[]> {
+  const result = await sql`SELECT * FROM leads WHERE status = ${status} ORDER BY created_at DESC`;
+  return result as Lead[];
+}
+
+// ============================================
+// SERVICES MANAGEMENT
+// ============================================
+
+export interface Service {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  price_range?: string;
+  base_price?: number;
+  turnaround_time?: string;
+  is_active: boolean;
+  display_order: number;
+  features?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getAllServices(): Promise<Service[]> {
+  const result = await sql`SELECT * FROM services ORDER BY display_order, name`;
+  return result as Service[];
+}
+
+export async function getActiveServices(): Promise<Service[]> {
+  const result = await sql`SELECT * FROM services WHERE is_active = true ORDER BY display_order, name`;
+  return result as Service[];
+}
+
+export async function getServiceById(id: number): Promise<Service | null> {
+  const result = await sql`SELECT * FROM services WHERE id = ${id}`;
+  return result[0] as Service || null;
+}
+
+export async function createService(data: Partial<Service>): Promise<Service> {
+  const result = await sql`
+    INSERT INTO services (name, slug, description, price_range, base_price, turnaround_time, features, display_order, is_active)
+    VALUES (
+      ${data.name},
+      ${data.slug},
+      ${data.description || null},
+      ${data.price_range || null},
+      ${data.base_price || null},
+      ${data.turnaround_time || null},
+      ${JSON.stringify(data.features || [])},
+      ${data.display_order || 0},
+      ${data.is_active !== undefined ? data.is_active : true}
+    )
+    RETURNING *
+  `;
+  return result[0] as Service;
+}
+
+export async function updateService(id: number, data: Partial<Service>): Promise<Service | null> {
+  const result = await sql`
+    UPDATE services
+    SET
+      name = COALESCE(${data.name || null}, name),
+      slug = COALESCE(${data.slug || null}, slug),
+      description = COALESCE(${data.description || null}, description),
+      price_range = COALESCE(${data.price_range || null}, price_range),
+      base_price = COALESCE(${data.base_price || null}, base_price),
+      turnaround_time = COALESCE(${data.turnaround_time || null}, turnaround_time),
+      features = COALESCE(${data.features ? JSON.stringify(data.features) : null}, features),
+      display_order = COALESCE(${data.display_order !== undefined ? data.display_order : null}, display_order),
+      is_active = COALESCE(${data.is_active !== undefined ? data.is_active : null}, is_active),
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return result[0] as Service || null;
+}
+
+export async function deleteService(id: number): Promise<void> {
+  await sql`DELETE FROM services WHERE id = ${id}`;
+}
+
+// ============================================
+// COUNTIES MANAGEMENT
+// ============================================
+
+export interface County {
+  id: number;
+  name: string;
+  state: string;
+  is_active: boolean;
+  rush_available: boolean;
+  rush_fee?: number;
+  standard_turnaround?: string;
+  rush_turnaround?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getAllCounties(): Promise<County[]> {
+  const result = await sql`SELECT * FROM counties ORDER BY state, name`;
+  return result as County[];
+}
+
+export async function getActiveCounties(): Promise<County[]> {
+  const result = await sql`SELECT * FROM counties WHERE is_active = true ORDER BY state, name`;
+  return result as County[];
+}
+
+export async function getCountyById(id: number): Promise<County | null> {
+  const result = await sql`SELECT * FROM counties WHERE id = ${id}`;
+  return result[0] as County || null;
+}
+
+export async function createCounty(data: Partial<County>): Promise<County> {
+  const result = await sql`
+    INSERT INTO counties (name, state, is_active, rush_available, rush_fee, standard_turnaround, rush_turnaround, notes)
+    VALUES (
+      ${data.name},
+      ${data.state || 'CA'},
+      ${data.is_active !== undefined ? data.is_active : true},
+      ${data.rush_available !== undefined ? data.rush_available : true},
+      ${data.rush_fee || 50.00},
+      ${data.standard_turnaround || '3-5 business days'},
+      ${data.rush_turnaround || 'Same day / 24 hours'},
+      ${data.notes || null}
+    )
+    RETURNING *
+  `;
+  return result[0] as County;
+}
+
+export async function updateCounty(id: number, data: Partial<County>): Promise<County | null> {
+  const result = await sql`
+    UPDATE counties
+    SET
+      name = COALESCE(${data.name || null}, name),
+      state = COALESCE(${data.state || null}, state),
+      is_active = COALESCE(${data.is_active !== undefined ? data.is_active : null}, is_active),
+      rush_available = COALESCE(${data.rush_available !== undefined ? data.rush_available : null}, rush_available),
+      rush_fee = COALESCE(${data.rush_fee || null}, rush_fee),
+      standard_turnaround = COALESCE(${data.standard_turnaround || null}, standard_turnaround),
+      rush_turnaround = COALESCE(${data.rush_turnaround || null}, rush_turnaround),
+      notes = COALESCE(${data.notes || null}, notes),
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return result[0] as County || null;
+}
+
+export async function deleteCounty(id: number): Promise<void> {
+  await sql`DELETE FROM counties WHERE id = ${id}`;
+}
+
+// ============================================
+// TESTIMONIALS MANAGEMENT
+// ============================================
+
+export interface Testimonial {
+  id: number;
+  name: string;
+  company?: string;
+  content: string;
+  rating: number;
+  is_featured: boolean;
+  is_published: boolean;
+  service_type?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getAllTestimonials(): Promise<Testimonial[]> {
+  const result = await sql`SELECT * FROM testimonials ORDER BY created_at DESC`;
+  return result as Testimonial[];
+}
+
+export async function getPublishedTestimonials(): Promise<Testimonial[]> {
+  const result = await sql`SELECT * FROM testimonials WHERE is_published = true ORDER BY is_featured DESC, created_at DESC`;
+  return result as Testimonial[];
+}
+
+export async function getFeaturedTestimonials(): Promise<Testimonial[]> {
+  const result = await sql`SELECT * FROM testimonials WHERE is_published = true AND is_featured = true ORDER BY created_at DESC LIMIT 6`;
+  return result as Testimonial[];
+}
+
+export async function getTestimonialById(id: number): Promise<Testimonial | null> {
+  const result = await sql`SELECT * FROM testimonials WHERE id = ${id}`;
+  return result[0] as Testimonial || null;
+}
+
+export async function createTestimonial(data: Partial<Testimonial>): Promise<Testimonial> {
+  const result = await sql`
+    INSERT INTO testimonials (name, company, content, rating, is_featured, is_published, service_type)
+    VALUES (
+      ${data.name},
+      ${data.company || null},
+      ${data.content},
+      ${data.rating || 5},
+      ${data.is_featured || false},
+      ${data.is_published !== undefined ? data.is_published : true},
+      ${data.service_type || null}
+    )
+    RETURNING *
+  `;
+  return result[0] as Testimonial;
+}
+
+export async function updateTestimonial(id: number, data: Partial<Testimonial>): Promise<Testimonial | null> {
+  const result = await sql`
+    UPDATE testimonials
+    SET
+      name = COALESCE(${data.name || null}, name),
+      company = COALESCE(${data.company || null}, company),
+      content = COALESCE(${data.content || null}, content),
+      rating = COALESCE(${data.rating || null}, rating),
+      is_featured = COALESCE(${data.is_featured !== undefined ? data.is_featured : null}, is_featured),
+      is_published = COALESCE(${data.is_published !== undefined ? data.is_published : null}, is_published),
+      service_type = COALESCE(${data.service_type || null}, service_type),
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return result[0] as Testimonial || null;
+}
+
+export async function deleteTestimonial(id: number): Promise<void> {
+  await sql`DELETE FROM testimonials WHERE id = ${id}`;
+}
+
+// ============================================
+// JOB ATTEMPTS MANAGEMENT
+// ============================================
+
+export interface JobAttempt {
+  id: number;
+  job_id: number;
+  attempt_number: number;
+  attempt_date: string;
+  result: string;
+  notes?: string;
+  server_name?: string;
+  gps_location?: string;
+  photos_urls?: string[];
+  created_at: string;
+}
+
+export async function getJobAttempts(jobId: number): Promise<JobAttempt[]> {
+  const result = await sql`SELECT * FROM job_attempts WHERE job_id = ${jobId} ORDER BY attempt_number`;
+  return result as JobAttempt[];
+}
+
+export async function createJobAttempt(data: Partial<JobAttempt>): Promise<JobAttempt> {
+  const result = await sql`
+    INSERT INTO job_attempts (job_id, attempt_number, attempt_date, result, notes, server_name, gps_location, photos_urls)
+    VALUES (
+      ${data.job_id},
+      ${data.attempt_number || 1},
+      ${data.attempt_date || new Date().toISOString()},
+      ${data.result},
+      ${data.notes || null},
+      ${data.server_name || null},
+      ${data.gps_location || null},
+      ${data.photos_urls ? JSON.stringify(data.photos_urls) : null}
+    )
+    RETURNING *
+  `;
+  return result[0] as JobAttempt;
+}
+
+// ============================================
+// SITE SETTINGS MANAGEMENT
+// ============================================
+
+export interface SiteSetting {
+  id: number;
+  setting_key: string;
+  setting_value?: string;
+  setting_type: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getAllSettings(): Promise<SiteSetting[]> {
+  const result = await sql`SELECT * FROM site_settings ORDER BY setting_key`;
+  return result as SiteSetting[];
+}
+
+export async function getSettingByKey(key: string): Promise<SiteSetting | null> {
+  const result = await sql`SELECT * FROM site_settings WHERE setting_key = ${key}`;
+  return result[0] as SiteSetting || null;
+}
+
+export async function updateSetting(key: string, value: string): Promise<SiteSetting | null> {
+  const result = await sql`
+    UPDATE site_settings
+    SET setting_value = ${value}, updated_at = NOW()
+    WHERE setting_key = ${key}
+    RETURNING *
+  `;
+  return result[0] as SiteSetting || null;
+}
+
+export async function createSetting(key: string, value: string, type: string = 'text', description?: string): Promise<SiteSetting> {
+  const result = await sql`
+    INSERT INTO site_settings (setting_key, setting_value, setting_type, description)
+    VALUES (${key}, ${value}, ${type}, ${description || null})
+    ON CONFLICT (setting_key) DO UPDATE SET setting_value = ${value}, updated_at = NOW()
+    RETURNING *
+  `;
+  return result[0] as SiteSetting;
+}
+
+// ============================================
+// EXTENDED DATABASE INITIALIZATION
+// ============================================
+
+export async function initExtendedTables() {
+  // This would run the migration SQL
+  // For now, migrations should be run manually or via deployment script
+  console.log('Extended tables should be initialized via migration file');
+}
