@@ -1,29 +1,47 @@
 import type { Metadata } from "next";
-import ServicePage from "@/components/ServicePage";
+import EnhancedServicePage from "@/components/EnhancedServicePage";
 import { services, counties } from "@/data/services";
+import { getCountyServiceContent } from "@/data/county-service-content";
 
 const service = services["small-claims"];
 const county = counties["san-diego"];
+const content = getCountyServiceContent("small-claims", "san-diego")!;
 
 export const metadata: Metadata = {
-  title: `${service.name} in ${county.name} | Turbo Messengers`,
-  description: `Professional ${service.name.toLowerCase()} assistance throughout ${county.name}. ${service.description} Expert help with small claims preparation and filing.`,
+  title: `San Diego County Small Claims Court Help | Document Preparation | Turbo Messengers`,
+  description: `Small claims preparation and filing throughout San Diego County. Oceanside to Chula Vista. Sue for up to $12,500. Service included. Call (818) 771-0904.`,
   keywords: [
-    `small claims ${county.name}`,
-    `small claims court ${county.name}`,
-    "San Diego small claims",
-    "sue in small claims San Diego",
-    "small claims preparation",
-    "small claims limit California",
-    ...county.cities.slice(0, 5).map(city => `small claims ${city}`),
+    "small claims San Diego",
+    "San Diego small claims court",
+    "small claims help San Diego",
+    "file small claims San Diego",
+    "small claims preparation San Diego",
+    "sue someone San Diego",
+    "small claims court San Diego County",
+    "small claims Chula Vista",
+    "small claims Oceanside",
+    "small claims Escondido",
+    "small claims Carlsbad",
+    "California small claims limit",
   ],
   openGraph: {
-    title: `${service.name} in ${county.name} | Turbo Messengers`,
-    description: `Professional ${service.name.toLowerCase()} assistance throughout ${county.name}`,
+    title: `San Diego County Small Claims Court Help | Turbo Messengers`,
+    description: `Small claims preparation and filing throughout San Diego County.`,
     type: "website",
+    url: "https://turbomessengers.com/services/small-claims/san-diego",
+  },
+  alternates: {
+    canonical: "/services/small-claims/san-diego",
   },
 };
 
 export default function SmallClaimsSanDiegoPage() {
-  return <ServicePage service={service} county={county} />;
+  return (
+    <EnhancedServicePage
+      service={service}
+      county={county}
+      content={content}
+      heroImage="/images/sd-courthouse.jpg"
+    />
+  );
 }

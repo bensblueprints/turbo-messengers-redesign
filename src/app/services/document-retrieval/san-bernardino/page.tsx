@@ -1,29 +1,47 @@
 import type { Metadata } from "next";
-import ServicePage from "@/components/ServicePage";
+import EnhancedServicePage from "@/components/EnhancedServicePage";
 import { services, counties } from "@/data/services";
+import { getCountyServiceContent } from "@/data/county-service-content";
 
 const service = services["document-retrieval"];
 const county = counties["san-bernardino"];
+const content = getCountyServiceContent("document-retrieval", "san-bernardino")!;
 
 export const metadata: Metadata = {
-  title: `${service.name} in ${county.name} | Turbo Messengers`,
-  description: `Professional ${service.name.toLowerCase()} throughout ${county.name}. ${service.description} Fast retrieval of court records and filed documents.`,
+  title: `San Bernardino County Court Document Retrieval | Turbo Messengers`,
+  description: `Court document retrieval from all 6 San Bernardino County courthouses. Valley to high desert coverage. Certified copies available. Call (818) 771-0904.`,
   keywords: [
-    `document retrieval ${county.name}`,
-    `court records ${county.name}`,
-    "San Bernardino court records",
+    "document retrieval San Bernardino County",
+    "court records San Bernardino",
     "get court documents San Bernardino",
-    "certified copies San Bernardino",
-    "case file retrieval",
-    ...county.cities.slice(0, 5).map(city => `document retrieval ${city}`),
+    "certified copies San Bernardino County",
+    "San Bernardino Superior Court records",
+    "retrieve court records San Bernardino",
+    "judgment copy San Bernardino",
+    "San Bernardino Justice Center records",
+    "Victorville court records",
+    "Rancho Cucamonga court records",
+    "Inland Empire court documents",
+    "high desert court records",
   ],
   openGraph: {
-    title: `${service.name} in ${county.name} | Turbo Messengers`,
-    description: `Professional ${service.name.toLowerCase()} throughout ${county.name}`,
+    title: `San Bernardino County Court Document Retrieval | Turbo Messengers`,
+    description: `Court document retrieval from all 6 San Bernardino County courthouses.`,
     type: "website",
+    url: "https://turbomessengers.com/services/document-retrieval/san-bernardino",
+  },
+  alternates: {
+    canonical: "/services/document-retrieval/san-bernardino",
   },
 };
 
 export default function DocumentRetrievalSanBernardinoPage() {
-  return <ServicePage service={service} county={county} />;
+  return (
+    <EnhancedServicePage
+      service={service}
+      county={county}
+      content={content}
+      heroImage="/images/sb-courthouse.jpg"
+    />
+  );
 }

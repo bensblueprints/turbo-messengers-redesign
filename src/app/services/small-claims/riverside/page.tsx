@@ -1,29 +1,47 @@
 import type { Metadata } from "next";
-import ServicePage from "@/components/ServicePage";
+import EnhancedServicePage from "@/components/EnhancedServicePage";
 import { services, counties } from "@/data/services";
+import { getCountyServiceContent } from "@/data/county-service-content";
 
 const service = services["small-claims"];
 const county = counties["riverside"];
+const content = getCountyServiceContent("small-claims", "riverside")!;
 
 export const metadata: Metadata = {
-  title: `${service.name} in ${county.name} | Turbo Messengers`,
-  description: `Professional ${service.name.toLowerCase()} assistance throughout ${county.name}. ${service.description} Expert help with small claims preparation and filing.`,
+  title: `Riverside County Small Claims Court Help | Document Preparation | Turbo Messengers`,
+  description: `Small claims preparation and filing throughout Riverside County. Inland Empire to Coachella Valley. Sue for up to $12,500. Service included. Call (818) 771-0904.`,
   keywords: [
-    `small claims ${county.name}`,
-    `small claims court ${county.name}`,
-    "Riverside small claims",
-    "sue in small claims Riverside",
-    "small claims preparation",
-    "small claims limit California",
-    ...county.cities.slice(0, 5).map(city => `small claims ${city}`),
+    "small claims Riverside County",
+    "Riverside small claims court",
+    "small claims help Riverside",
+    "file small claims Riverside",
+    "small claims preparation Inland Empire",
+    "sue someone Riverside",
+    "small claims court Riverside County",
+    "small claims Corona",
+    "small claims Murrieta",
+    "small claims Temecula",
+    "small claims Palm Springs",
+    "California small claims limit",
   ],
   openGraph: {
-    title: `${service.name} in ${county.name} | Turbo Messengers`,
-    description: `Professional ${service.name.toLowerCase()} assistance throughout ${county.name}`,
+    title: `Riverside County Small Claims Court Help | Turbo Messengers`,
+    description: `Small claims preparation and filing throughout Riverside County. Service included.`,
     type: "website",
+    url: "https://turbomessengers.com/services/small-claims/riverside",
+  },
+  alternates: {
+    canonical: "/services/small-claims/riverside",
   },
 };
 
 export default function SmallClaimsRiversidePage() {
-  return <ServicePage service={service} county={county} />;
+  return (
+    <EnhancedServicePage
+      service={service}
+      county={county}
+      content={content}
+      heroImage="/images/riverside-courthouse.jpg"
+    />
+  );
 }

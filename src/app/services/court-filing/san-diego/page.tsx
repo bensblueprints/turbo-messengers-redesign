@@ -1,29 +1,47 @@
 import type { Metadata } from "next";
-import ServicePage from "@/components/ServicePage";
+import EnhancedServicePage from "@/components/EnhancedServicePage";
 import { services, counties } from "@/data/services";
+import { getCountyServiceContent } from "@/data/county-service-content";
 
 const service = services["court-filing"];
 const county = counties["san-diego"];
+const content = getCountyServiceContent("court-filing", "san-diego")!;
 
 export const metadata: Metadata = {
-  title: `${service.name} in ${county.name} | Turbo Messengers`,
-  description: `Professional ${service.name.toLowerCase()} throughout ${county.name}. ${service.description} Same-day filing at all ${county.name} courts.`,
+  title: `San Diego County Court Filing Services | Same-Day Filing | Turbo Messengers`,
+  description: `Court filing at all 6 San Diego County courthouses. Central Courthouse, Vista, Chula Vista, El Cajon. Same-day filing. Call (818) 771-0904.`,
   keywords: [
-    `court filing ${county.name}`,
-    `file court documents ${county.name}`,
-    "San Diego court filing",
+    "court filing San Diego",
+    "San Diego court filing service",
+    "file documents San Diego",
     "San Diego Central Courthouse filing",
-    "San Diego Superior Court filing",
     "same day court filing San Diego",
-    ...county.cities.slice(0, 5).map(city => `court filing ${city}`),
+    "civil filing San Diego County",
+    "family law filing San Diego",
+    "San Diego Superior Court filing",
+    "Vista court filing",
+    "Chula Vista court filing",
+    "El Cajon court filing",
+    "North County court filing",
   ],
   openGraph: {
-    title: `${service.name} in ${county.name} | Turbo Messengers`,
-    description: `Professional ${service.name.toLowerCase()} throughout ${county.name}`,
+    title: `San Diego County Court Filing Services | Turbo Messengers`,
+    description: `Court filing at all 6 San Diego County courthouses. Same-day filing available.`,
     type: "website",
+    url: "https://turbomessengers.com/services/court-filing/san-diego",
+  },
+  alternates: {
+    canonical: "/services/court-filing/san-diego",
   },
 };
 
 export default function CourtFilingSanDiegoPage() {
-  return <ServicePage service={service} county={county} />;
+  return (
+    <EnhancedServicePage
+      service={service}
+      county={county}
+      content={content}
+      heroImage="/images/sd-courthouse.jpg"
+    />
+  );
 }

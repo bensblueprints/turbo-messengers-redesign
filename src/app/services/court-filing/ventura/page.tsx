@@ -1,28 +1,46 @@
 import type { Metadata } from "next";
-import ServicePage from "@/components/ServicePage";
+import EnhancedServicePage from "@/components/EnhancedServicePage";
 import { services, counties } from "@/data/services";
+import { getCountyServiceContent } from "@/data/county-service-content";
 
 const service = services["court-filing"];
 const county = counties["ventura"];
+const content = getCountyServiceContent("court-filing", "ventura")!;
 
 export const metadata: Metadata = {
-  title: `${service.name} in ${county.name} | Turbo Messengers`,
-  description: `Professional ${service.name.toLowerCase()} throughout ${county.name}. ${service.description} Same-day filing at all ${county.name} courts.`,
+  title: `Ventura County Court Filing Services | Same-Day Filing | Turbo Messengers`,
+  description: `Same-day court filing at all Ventura County courthouses. Hall of Justice and Simi Valley coverage. Stamped copies returned same day. Call (818) 771-0904.`,
   keywords: [
-    `court filing ${county.name}`,
-    `file court documents ${county.name}`,
-    "Ventura court filing",
-    "Ventura County Superior Court filing",
+    "court filing Ventura County",
+    "Ventura court filing service",
+    "file documents Ventura",
+    "Ventura Hall of Justice filing",
+    "Simi Valley court filing",
     "same day court filing Ventura",
-    ...county.cities.slice(0, 5).map(city => `court filing ${city}`),
+    "civil filing Ventura County",
+    "family law filing Ventura",
+    "Ventura Superior Court filing",
+    "Thousand Oaks court filing",
+    "Oxnard court filing",
   ],
   openGraph: {
-    title: `${service.name} in ${county.name} | Turbo Messengers`,
-    description: `Professional ${service.name.toLowerCase()} throughout ${county.name}`,
+    title: `Ventura County Court Filing Services | Turbo Messengers`,
+    description: `Same-day court filing at all Ventura County courthouses.`,
     type: "website",
+    url: "https://turbomessengers.com/services/court-filing/ventura",
+  },
+  alternates: {
+    canonical: "/services/court-filing/ventura",
   },
 };
 
 export default function CourtFilingVenturaPage() {
-  return <ServicePage service={service} county={county} />;
+  return (
+    <EnhancedServicePage
+      service={service}
+      county={county}
+      content={content}
+      heroImage="/images/ventura-courthouse.jpg"
+    />
+  );
 }

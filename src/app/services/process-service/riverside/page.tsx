@@ -1,29 +1,49 @@
 import type { Metadata } from "next";
-import ServicePage from "@/components/ServicePage";
+import EnhancedServicePage from "@/components/EnhancedServicePage";
 import { services, counties } from "@/data/services";
+import { getCountyServiceContent } from "@/data/county-service-content";
 
 const service = services["process-service"];
 const county = counties["riverside"];
+const content = getCountyServiceContent("process-service", "riverside")!;
 
 export const metadata: Metadata = {
-  title: `${service.name} in ${county.name} | Turbo Messengers`,
-  description: `Professional ${service.name.toLowerCase()} throughout ${county.name}. ${service.description} Same-day service available at all ${county.name} courts.`,
+  title: `Process Servers in Riverside County CA | Inland Empire | Turbo Messengers`,
+  description: `Professional process servers throughout Riverside County from Corona to Palm Springs. Inland Empire & Coachella Valley coverage. Same-day service. Call (818) 771-0904.`,
   keywords: [
-    `process server ${county.name}`,
-    `process service ${county.name}`,
-    "Riverside process server",
+    "process server Riverside County",
+    "Riverside process serving",
     "serve papers Riverside",
-    "Riverside Hall of Justice",
     "Inland Empire process server",
-    ...county.cities.slice(0, 5).map(city => `process server ${city}`),
+    "Corona process server",
+    "Murrieta process server",
+    "Temecula process server",
+    "Palm Springs process server",
+    "Palm Desert process server",
+    "Moreno Valley process server",
+    "Riverside Hall of Justice",
+    "same day process service Riverside",
+    "Coachella Valley process server",
+    "serve subpoena Riverside County",
   ],
   openGraph: {
-    title: `${service.name} in ${county.name} | Turbo Messengers`,
-    description: `Professional ${service.name.toLowerCase()} throughout ${county.name}`,
+    title: `Process Servers in Riverside County | Turbo Messengers`,
+    description: `Professional process servers throughout Riverside County from Corona to Palm Springs.`,
     type: "website",
+    url: "https://turbomessengers.com/services/process-service/riverside",
+  },
+  alternates: {
+    canonical: "/services/process-service/riverside",
   },
 };
 
 export default function ProcessServiceRiversidePage() {
-  return <ServicePage service={service} county={county} />;
+  return (
+    <EnhancedServicePage
+      service={service}
+      county={county}
+      content={content}
+      heroImage="/images/riverside-courthouse.jpg"
+    />
+  );
 }

@@ -1,29 +1,47 @@
 import type { Metadata } from "next";
-import ServicePage from "@/components/ServicePage";
+import EnhancedServicePage from "@/components/EnhancedServicePage";
 import { services, counties } from "@/data/services";
+import { getCountyServiceContent } from "@/data/county-service-content";
 
 const service = services["small-claims"];
 const county = counties["ventura"];
+const content = getCountyServiceContent("small-claims", "ventura")!;
 
 export const metadata: Metadata = {
-  title: `${service.name} in ${county.name} | Turbo Messengers`,
-  description: `Professional ${service.name.toLowerCase()} assistance throughout ${county.name}. ${service.description} Expert help with small claims preparation and filing.`,
+  title: `Ventura County Small Claims Court Help | Document Preparation | Turbo Messengers`,
+  description: `Small claims preparation and filing throughout Ventura County. Thousand Oaks to Oxnard. Sue for up to $12,500. Service included. Call (818) 771-0904.`,
   keywords: [
-    `small claims ${county.name}`,
-    `small claims court ${county.name}`,
-    "Ventura small claims",
-    "sue in small claims Ventura",
-    "small claims preparation",
-    "small claims limit California",
-    ...county.cities.slice(0, 5).map(city => `small claims ${city}`),
+    "small claims Ventura County",
+    "Ventura small claims court",
+    "small claims help Ventura",
+    "file small claims Ventura",
+    "small claims preparation Ventura",
+    "sue someone Ventura",
+    "small claims court Ventura County",
+    "small claims Thousand Oaks",
+    "small claims Oxnard",
+    "small claims Simi Valley",
+    "small claims Camarillo",
+    "California small claims limit",
   ],
   openGraph: {
-    title: `${service.name} in ${county.name} | Turbo Messengers`,
-    description: `Professional ${service.name.toLowerCase()} assistance throughout ${county.name}`,
+    title: `Ventura County Small Claims Court Help | Turbo Messengers`,
+    description: `Small claims preparation and filing throughout Ventura County.`,
     type: "website",
+    url: "https://turbomessengers.com/services/small-claims/ventura",
+  },
+  alternates: {
+    canonical: "/services/small-claims/ventura",
   },
 };
 
 export default function SmallClaimsVenturaPage() {
-  return <ServicePage service={service} county={county} />;
+  return (
+    <EnhancedServicePage
+      service={service}
+      county={county}
+      content={content}
+      heroImage="/images/ventura-courthouse.jpg"
+    />
+  );
 }

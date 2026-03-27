@@ -1,29 +1,47 @@
 import type { Metadata } from "next";
-import ServicePage from "@/components/ServicePage";
+import EnhancedServicePage from "@/components/EnhancedServicePage";
 import { services, counties } from "@/data/services";
+import { getCountyServiceContent } from "@/data/county-service-content";
 
 const service = services["document-retrieval"];
 const county = counties["orange-county"];
+const content = getCountyServiceContent("document-retrieval", "orange-county")!;
 
 export const metadata: Metadata = {
-  title: `${service.name} in ${county.name} | Turbo Messengers`,
-  description: `Professional ${service.name.toLowerCase()} throughout ${county.name}. ${service.description} Fast retrieval of court records and filed documents.`,
+  title: `Orange County Court Document Retrieval | Same-Day Service | Turbo Messengers`,
+  description: `Fast court document retrieval from all 5 Orange County justice centers. Certified copies, judgments, filed pleadings. Same-day service. Call (818) 771-0904.`,
   keywords: [
-    `document retrieval ${county.name}`,
-    `court records ${county.name}`,
-    "Orange County court records",
+    "document retrieval Orange County",
+    "court records Orange County",
     "get court documents OC",
     "certified copies Orange County",
-    "case file retrieval",
-    ...county.cities.slice(0, 5).map(city => `document retrieval ${city}`),
+    "OC Superior Court records",
+    "retrieve court records OC",
+    "judgment copy Orange County",
+    "court file search OC",
+    "Central Justice Center records",
+    "legal document copies Orange County",
+    "court document service OC",
+    "retrieve filed documents Orange County",
   ],
   openGraph: {
-    title: `${service.name} in ${county.name} | Turbo Messengers`,
-    description: `Professional ${service.name.toLowerCase()} throughout ${county.name}`,
+    title: `Orange County Court Document Retrieval | Turbo Messengers`,
+    description: `Same-day court document retrieval from all 5 OC justice centers. Certified copies available.`,
     type: "website",
+    url: "https://turbomessengers.com/services/document-retrieval/orange-county",
+  },
+  alternates: {
+    canonical: "/services/document-retrieval/orange-county",
   },
 };
 
 export default function DocumentRetrievalOrangeCountyPage() {
-  return <ServicePage service={service} county={county} />;
+  return (
+    <EnhancedServicePage
+      service={service}
+      county={county}
+      content={content}
+      heroImage="/images/oc-courthouse.jpg"
+    />
+  );
 }

@@ -1,29 +1,47 @@
 import type { Metadata } from "next";
-import ServicePage from "@/components/ServicePage";
+import EnhancedServicePage from "@/components/EnhancedServicePage";
 import { services, counties } from "@/data/services";
+import { getCountyServiceContent } from "@/data/county-service-content";
 
 const service = services["small-claims"];
 const county = counties["san-bernardino"];
+const content = getCountyServiceContent("small-claims", "san-bernardino")!;
 
 export const metadata: Metadata = {
-  title: `${service.name} in ${county.name} | Turbo Messengers`,
-  description: `Professional ${service.name.toLowerCase()} assistance throughout ${county.name}. ${service.description} Expert help with small claims preparation and filing.`,
+  title: `San Bernardino County Small Claims Court Help | Document Preparation | Turbo Messengers`,
+  description: `Small claims preparation and filing throughout San Bernardino County. Ontario to Victorville coverage. Sue for up to $12,500. Call (818) 771-0904.`,
   keywords: [
-    `small claims ${county.name}`,
-    `small claims court ${county.name}`,
-    "San Bernardino small claims",
-    "sue in small claims San Bernardino",
-    "small claims preparation",
-    "small claims limit California",
-    ...county.cities.slice(0, 5).map(city => `small claims ${city}`),
+    "small claims San Bernardino County",
+    "San Bernardino small claims court",
+    "small claims help San Bernardino",
+    "file small claims San Bernardino",
+    "small claims preparation Inland Empire",
+    "sue someone San Bernardino",
+    "small claims court San Bernardino County",
+    "small claims Ontario",
+    "small claims Rancho Cucamonga",
+    "small claims Victorville",
+    "small claims Fontana",
+    "California small claims limit",
   ],
   openGraph: {
-    title: `${service.name} in ${county.name} | Turbo Messengers`,
-    description: `Professional ${service.name.toLowerCase()} assistance throughout ${county.name}`,
+    title: `San Bernardino County Small Claims Court Help | Turbo Messengers`,
+    description: `Small claims preparation and filing throughout San Bernardino County.`,
     type: "website",
+    url: "https://turbomessengers.com/services/small-claims/san-bernardino",
+  },
+  alternates: {
+    canonical: "/services/small-claims/san-bernardino",
   },
 };
 
 export default function SmallClaimsSanBernardinoPage() {
-  return <ServicePage service={service} county={county} />;
+  return (
+    <EnhancedServicePage
+      service={service}
+      county={county}
+      content={content}
+      heroImage="/images/sb-courthouse.jpg"
+    />
+  );
 }
