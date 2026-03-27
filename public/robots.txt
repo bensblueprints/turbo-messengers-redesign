@@ -1,0 +1,11 @@
+# Turbo Messengers - Robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://turbo-messengers-redesign.netlify.app/sitemap.xml
+
+# Disallow admin and dashboard for crawlers
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /api
