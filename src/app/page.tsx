@@ -5,7 +5,6 @@ import { useRef } from "react";
 import {
   FileText,
   Scale,
-  Zap,
   Shield,
   Clock,
   MapPin,
@@ -63,25 +62,20 @@ function Navigation() {
       className="fixed top-0 left-0 right-0 z-50 px-6 py-4 bg-midnight-950/80 backdrop-blur-md border-b border-midnight-800/50"
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <motion.div
+        <motion.a
+          href="/"
           whileHover={{ scale: 1.02 }}
-          className="flex items-center gap-3"
+          className="flex items-center"
         >
           <img
-            src="/images/logo-white.png"
-            alt="Turbo Messengers"
-            className="h-10 w-auto"
+            src="/images/logo-nav.png"
+            alt="Turbo Messengers - Process Servers"
+            className="h-12 w-auto"
           />
-          <div>
-            <span className="text-xl font-display font-bold tracking-tight">
-              Turbo<span className="text-gold-400">Messengers</span>
-            </span>
-            <p className="text-xs text-midnight-400 -mt-0.5">Est. Since 2009</p>
-          </div>
-        </motion.div>
+        </motion.a>
 
         <div className="hidden md:flex items-center gap-8">
-          {["Services", "Coverage", "About", "Contact"].map((item, i) => (
+          {["Services", "About", "Contact"].map((item, i) => (
             <motion.a
               key={item}
               href={`#${item.toLowerCase()}`}
@@ -94,6 +88,16 @@ function Navigation() {
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gold-400 group-hover:w-full transition-all duration-300" />
             </motion.a>
           ))}
+          <motion.a
+            href="/links"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="text-sm font-medium text-midnight-300 hover:text-gold-400 transition-colors duration-300 relative group"
+          >
+            Links
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gold-400 group-hover:w-full transition-all duration-300" />
+          </motion.a>
         </div>
 
         <div className="flex items-center gap-3">
@@ -836,13 +840,12 @@ function Footer() {
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           {/* Logo & Description */}
           <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center">
-                <Zap className="w-5 h-5 text-midnight-950" />
-              </div>
-              <span className="text-xl font-display font-bold">
-                Turbo<span className="text-gold-400">Messengers</span>
-              </span>
+            <div className="mb-4">
+              <img
+                src="/images/logo-footer.png"
+                alt="Turbo Messengers - Process Servers"
+                className="h-16 w-auto"
+              />
             </div>
             <p className="text-midnight-400 max-w-md leading-relaxed">
               Southern California&apos;s premier process serving and court filing service. Fast, reliable, and honest since 2009.

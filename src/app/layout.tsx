@@ -15,10 +15,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script src="https://elevenlabs.io/convai-widget/index.js" async></script>
+      </head>
       <body>
         <Providers>
           <div className="noise-overlay" aria-hidden="true" />
           {children}
+          {/* ElevenLabs Voice Agent Widget */}
+          <elevenlabs-convai agent-id="agent_0801kmpmtnevfk0bmxfkctp7t0fp"></elevenlabs-convai>
         </Providers>
       </body>
     </html>

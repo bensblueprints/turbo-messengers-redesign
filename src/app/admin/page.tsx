@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
   Users,
@@ -18,6 +18,15 @@ import {
   Loader2,
   RefreshCw,
   Calendar,
+  Plus,
+  X,
+  User,
+  Mail,
+  Phone,
+  Building,
+  MapPin,
+  Scale,
+  AlertCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -62,6 +71,22 @@ const jobTypeLabels: Record<string, string> = {
   document_retrieval: "Doc Retrieval",
 };
 
+const serviceTypes = [
+  { id: "process_service", label: "Process Service", price: 95 },
+  { id: "court_filing", label: "Court Filing", price: 75 },
+  { id: "small_claims", label: "Small Claims Prep", price: 125 },
+  { id: "document_retrieval", label: "Document Retrieval", price: 65 },
+];
+
+const counties = [
+  "Los Angeles",
+  "Ventura",
+  "San Bernardino",
+  "Riverside",
+  "Orange",
+  "San Diego",
+];
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -72,11 +97,40 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<"overview" | "jobs" | "clients">("overview");
 
+  // Modal states
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
+  const [showAddOrderModal, setShowAddOrderModal] = useState(false);
+  const [selectedClientForOrder, setSelectedClientForOrder] = useState<Client | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // New client form
+  const [newClient, setNewClient] = useState({
+    email: "",
+    password: "",
+    full_name: "",
+    company_name: "",
+    phone: "",
+  });
+
+  // New order form
+  const [newOrder, setNewOrder] = useState({
+    client_id: 0,
+    job_type: "",
+    defendant_name: "",
+    defendant_address: "",
+    case_number: "",
+    court_name: "",
+    notes: "",
+    rush_service: false,
+    county: "",
+  });
+
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/admin/login");
     } else if (status === "authenticated") {
-      // Check if user is admin
       const userRole = (session?.user as { role?: string })?.role;
       if (userRole !== "admin") {
         router.push("/admin/login");
@@ -128,6 +182,90 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error updating job status:", error);
     }
+  };
+
+  const handleAddClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/admin/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newClient),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create client");
+      }
+
+      setSuccess("Client created successfully!");
+      setNewClient({ email: "", password: "", full_name: "", company_name: "", phone: "" });
+      fetchData();
+      setTimeout(() => {
+        setShowAddClientModal(false);
+        setSuccess("");
+      }, 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create client");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAddOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/admin/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...newOrder,
+          client_id: selectedClientForOrder?.id || newOrder.client_id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create order");
+      }
+
+      setSuccess("Order created successfully!");
+      setNewOrder({
+        client_id: 0,
+        job_type: "",
+        defendant_name: "",
+        defendant_address: "",
+        case_number: "",
+        court_name: "",
+        notes: "",
+        rush_service: false,
+        county: "",
+      });
+      setSelectedClientForOrder(null);
+      fetchData();
+      setTimeout(() => {
+        setShowAddOrderModal(false);
+        setSuccess("");
+      }, 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create order");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const openOrderModalForClient = (client: Client) => {
+    setSelectedClientForOrder(client);
+    setNewOrder({ ...newOrder, client_id: client.id });
+    setShowAddOrderModal(true);
   };
 
   const filteredJobs = jobs.filter((job) => {
@@ -203,7 +341,7 @@ export default function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Tab Navigation */}
-        <div className="flex gap-2 mb-8">
+        <div className="flex flex-wrap gap-2 mb-8">
           {[
             { id: "overview", label: "Overview", icon: TrendingUp },
             { id: "jobs", label: "All Jobs", icon: FileText },
@@ -222,6 +360,28 @@ export default function AdminDashboard() {
               {tab.label}
             </button>
           ))}
+
+          {/* Quick Actions */}
+          <div className="flex gap-2 ml-auto">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowAddClientModal(true)}
+              className="px-4 py-2 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/30 font-medium flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Client
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowAddOrderModal(true)}
+              className="px-4 py-2 rounded-lg bg-gold-500/10 text-gold-400 border border-gold-500/30 font-medium flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New Order
+            </motion.button>
+          </div>
         </div>
 
         {/* Overview Tab */}
@@ -349,6 +509,7 @@ export default function AdminDashboard() {
                       <th className="px-6 py-4 text-left text-sm font-medium text-midnight-400">Type</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-midnight-400">Defendant</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-midnight-400">Case #</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-midnight-400">Client</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-midnight-400">Status</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-midnight-400">Created</th>
                       <th className="px-6 py-4 text-right text-sm font-medium text-midnight-400">Actions</th>
@@ -357,6 +518,7 @@ export default function AdminDashboard() {
                   <tbody>
                     {filteredJobs.map((job) => {
                       const status = statusColors[job.status] || statusColors.pending;
+                      const client = clients.find(c => c.id === job.client_id);
                       return (
                         <tr
                           key={job.id}
@@ -385,6 +547,11 @@ export default function AdminDashboard() {
                           <td className="px-6 py-4">
                             <span className="text-midnight-300 font-mono text-sm">
                               {job.case_number || "-"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-midnight-300 text-sm">
+                              {client?.full_name || "-"}
                             </span>
                           </td>
                           <td className="px-6 py-4">
@@ -441,6 +608,7 @@ export default function AdminDashboard() {
                       <th className="px-6 py-4 text-left text-sm font-medium text-midnight-400">Phone</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-midnight-400">Joined</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-midnight-400">Orders</th>
+                      <th className="px-6 py-4 text-right text-sm font-medium text-midnight-400">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -471,6 +639,19 @@ export default function AdminDashboard() {
                           <td className="px-6 py-4">
                             <span className="text-electric-400 font-medium">{clientJobs.length}</span>
                           </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-end gap-2">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => openOrderModalForClient(client)}
+                                className="px-3 py-1.5 rounded-lg bg-gold-500/10 text-gold-400 text-sm font-medium flex items-center gap-1 hover:bg-gold-500/20 transition-colors"
+                              >
+                                <Plus className="w-3 h-3" />
+                                Add Order
+                              </motion.button>
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}
@@ -481,6 +662,390 @@ export default function AdminDashboard() {
           </motion.div>
         )}
       </div>
+
+      {/* Add Client Modal */}
+      <AnimatePresence>
+        {showAddClientModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowAddClientModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-midnight-900 border border-midnight-800/50 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-display font-bold text-white">Add New Client</h2>
+                <button
+                  onClick={() => setShowAddClientModal(false)}
+                  className="p-2 rounded-lg text-midnight-400 hover:text-white hover:bg-midnight-800 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {error && (
+                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-400" />
+                  <span className="text-red-400 text-sm">{error}</span>
+                </div>
+              )}
+
+              {success && (
+                <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span className="text-green-400 text-sm">{success}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleAddClient} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-midnight-300 mb-2">
+                    <User className="w-4 h-4 inline mr-2" />
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={newClient.full_name}
+                    onChange={(e) => setNewClient({ ...newClient, full_name: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 rounded-xl bg-midnight-800/50 border border-midnight-700/50 text-white placeholder-midnight-500 focus:outline-none focus:border-electric-500/50"
+                    placeholder="John Smith"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-midnight-300 mb-2">
+                    <Building className="w-4 h-4 inline mr-2" />
+                    Company / Law Firm
+                  </label>
+                  <input
+                    type="text"
+                    value={newClient.company_name}
+                    onChange={(e) => setNewClient({ ...newClient, company_name: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-midnight-800/50 border border-midnight-700/50 text-white placeholder-midnight-500 focus:outline-none focus:border-electric-500/50"
+                    placeholder="Smith & Associates"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-midnight-300 mb-2">
+                    <Mail className="w-4 h-4 inline mr-2" />
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={newClient.email}
+                    onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 rounded-xl bg-midnight-800/50 border border-midnight-700/50 text-white placeholder-midnight-500 focus:outline-none focus:border-electric-500/50"
+                    placeholder="john@lawfirm.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-midnight-300 mb-2">
+                    <Phone className="w-4 h-4 inline mr-2" />
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={newClient.phone}
+                    onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-midnight-800/50 border border-midnight-700/50 text-white placeholder-midnight-500 focus:outline-none focus:border-electric-500/50"
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-midnight-300 mb-2">
+                    Password *
+                  </label>
+                  <input
+                    type="password"
+                    value={newClient.password}
+                    onChange={(e) => setNewClient({ ...newClient, password: e.target.value })}
+                    required
+                    minLength={8}
+                    className="w-full px-4 py-3 rounded-xl bg-midnight-800/50 border border-midnight-700/50 text-white placeholder-midnight-500 focus:outline-none focus:border-electric-500/50"
+                    placeholder="Min 8 characters"
+                  />
+                </div>
+
+                <motion.button
+                  type="submit"
+                  disabled={isSubmitting}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-400 to-purple-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-5 h-5" />
+                      Create Client
+                    </>
+                  )}
+                </motion.button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Order Modal */}
+      <AnimatePresence>
+        {showAddOrderModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => {
+              setShowAddOrderModal(false);
+              setSelectedClientForOrder(null);
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-midnight-900 border border-midnight-800/50 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-display font-bold text-white">Create New Order</h2>
+                  {selectedClientForOrder && (
+                    <p className="text-midnight-400 text-sm mt-1">
+                      For: {selectedClientForOrder.full_name} ({selectedClientForOrder.company_name || selectedClientForOrder.email})
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    setShowAddOrderModal(false);
+                    setSelectedClientForOrder(null);
+                  }}
+                  className="p-2 rounded-lg text-midnight-400 hover:text-white hover:bg-midnight-800 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {error && (
+                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-400" />
+                  <span className="text-red-400 text-sm">{error}</span>
+                </div>
+              )}
+
+              {success && (
+                <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span className="text-green-400 text-sm">{success}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleAddOrder} className="space-y-4">
+                {/* Client Selection (if not pre-selected) */}
+                {!selectedClientForOrder && (
+                  <div>
+                    <label className="block text-sm font-medium text-midnight-300 mb-2">
+                      <User className="w-4 h-4 inline mr-2" />
+                      Select Client *
+                    </label>
+                    <select
+                      value={newOrder.client_id}
+                      onChange={(e) => setNewOrder({ ...newOrder, client_id: parseInt(e.target.value) })}
+                      required
+                      className="w-full px-4 py-3 rounded-xl bg-midnight-800/50 border border-midnight-700/50 text-white focus:outline-none focus:border-gold-500/50"
+                    >
+                      <option value="">Select a client...</option>
+                      {clients.map((client) => (
+                        <option key={client.id} value={client.id}>
+                          {client.full_name} - {client.company_name || client.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Service Type */}
+                <div>
+                  <label className="block text-sm font-medium text-midnight-300 mb-2">
+                    Service Type *
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {serviceTypes.map((service) => (
+                      <button
+                        key={service.id}
+                        type="button"
+                        onClick={() => setNewOrder({ ...newOrder, job_type: service.id })}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          newOrder.job_type === service.id
+                            ? "bg-gold-500/10 border-gold-500/50"
+                            : "bg-midnight-800/50 border-midnight-700/50 hover:border-midnight-600"
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="text-white font-medium text-sm">{service.label}</span>
+                          <span className="text-gold-400 font-bold text-sm">${service.price}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Rush Service */}
+                <div
+                  onClick={() => setNewOrder({ ...newOrder, rush_service: !newOrder.rush_service })}
+                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                    newOrder.rush_service
+                      ? "bg-orange-500/10 border-orange-500/50"
+                      : "bg-midnight-800/50 border-midnight-700/50 hover:border-midnight-600"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clock className={`w-4 h-4 ${newOrder.rush_service ? "text-orange-400" : "text-midnight-500"}`} />
+                      <span className="text-white text-sm">Rush Service (+$50)</span>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      newOrder.rush_service ? "bg-orange-500 border-orange-500" : "border-midnight-600"
+                    }`}>
+                      {newOrder.rush_service && <CheckCircle className="w-3 h-3 text-white" />}
+                    </div>
+                  </div>
+                </div>
+
+                {/* County */}
+                <div>
+                  <label className="block text-sm font-medium text-midnight-300 mb-2">County *</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {counties.map((county) => (
+                      <button
+                        key={county}
+                        type="button"
+                        onClick={() => setNewOrder({ ...newOrder, county })}
+                        className={`px-3 py-2 rounded-lg border text-sm transition-all ${
+                          newOrder.county === county
+                            ? "bg-gold-500/10 border-gold-500/50 text-gold-400"
+                            : "bg-midnight-800/50 border-midnight-700/50 text-midnight-300 hover:border-midnight-600"
+                        }`}
+                      >
+                        {county}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-midnight-300 mb-2">
+                      <User className="w-4 h-4 inline mr-2" />
+                      Defendant Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={newOrder.defendant_name}
+                      onChange={(e) => setNewOrder({ ...newOrder, defendant_name: e.target.value })}
+                      required
+                      className="w-full px-4 py-3 rounded-xl bg-midnight-800/50 border border-midnight-700/50 text-white placeholder-midnight-500 focus:outline-none focus:border-gold-500/50"
+                      placeholder="John Doe"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-midnight-300 mb-2">
+                      <Scale className="w-4 h-4 inline mr-2" />
+                      Case Number
+                    </label>
+                    <input
+                      type="text"
+                      value={newOrder.case_number}
+                      onChange={(e) => setNewOrder({ ...newOrder, case_number: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-midnight-800/50 border border-midnight-700/50 text-white placeholder-midnight-500 focus:outline-none focus:border-gold-500/50"
+                      placeholder="23CV12345"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-midnight-300 mb-2">
+                    <MapPin className="w-4 h-4 inline mr-2" />
+                    Service Address *
+                  </label>
+                  <input
+                    type="text"
+                    value={newOrder.defendant_address}
+                    onChange={(e) => setNewOrder({ ...newOrder, defendant_address: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 rounded-xl bg-midnight-800/50 border border-midnight-700/50 text-white placeholder-midnight-500 focus:outline-none focus:border-gold-500/50"
+                    placeholder="123 Main St, Los Angeles, CA 90001"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-midnight-300 mb-2">
+                    Court Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newOrder.court_name}
+                    onChange={(e) => setNewOrder({ ...newOrder, court_name: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-midnight-800/50 border border-midnight-700/50 text-white placeholder-midnight-500 focus:outline-none focus:border-gold-500/50"
+                    placeholder="Los Angeles Superior Court"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-midnight-300 mb-2">
+                    Special Instructions
+                  </label>
+                  <textarea
+                    value={newOrder.notes}
+                    onChange={(e) => setNewOrder({ ...newOrder, notes: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl bg-midnight-800/50 border border-midnight-700/50 text-white placeholder-midnight-500 focus:outline-none focus:border-gold-500/50 resize-none"
+                    placeholder="Any special instructions..."
+                  />
+                </div>
+
+                <motion.button
+                  type="submit"
+                  disabled={isSubmitting || !newOrder.job_type || !newOrder.defendant_name || !newOrder.defendant_address || !newOrder.county || (!selectedClientForOrder && !newOrder.client_id)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 text-midnight-950 font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Creating Order...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-5 h-5" />
+                      Create Order
+                    </>
+                  )}
+                </motion.button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
